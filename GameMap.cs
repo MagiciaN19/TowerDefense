@@ -51,6 +51,15 @@ namespace TowerDefense
             return points;
         }
 
+        public bool IsGrass(int x, int y)
+        {
+            int col = x / CellSize;
+            int row = y / CellSize;
+            if (row < 0 || row >= levelLayout.GetLength(0) || col < 0 || col >= levelLayout.GetLength(1))
+                return false;
+            return levelLayout[row, col] == 0;
+        }
+
         public void Draw(Graphics g)
         {
             int rows = levelLayout.GetLength(0);

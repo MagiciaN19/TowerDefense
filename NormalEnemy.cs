@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 namespace TowerDefense
 {
@@ -12,6 +13,7 @@ namespace TowerDefense
         {
             Speed = 3.0f;
             Health = 100;
+            Size = 30;
         }
         public override void Draw(Graphics g)
         {

@@ -30,6 +30,12 @@ namespace TowerDefense
             gameEngine.Update();
             this.Invalidate();
         }
+
+        private void Form1_MouseClick(object sender, MouseEventArgs e)
+        {
+            gameEngine.TryPlaceTower(e.X, e.Y);
+            this.Invalidate();
+        }
     }
 }
 
