@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.Devices;
+using System;
 using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Drawing;
 
 namespace TowerDefense
 {
@@ -15,14 +16,14 @@ namespace TowerDefense
         private List<Tower> towers = new List<Tower>();
         private List<Bullet> bullets = new List<Bullet>();
         private List<Explosion> explosions = new List<Explosion>();
-        private int enemySpawnTimer = 0;
-        public int Gold { get; private set; } = 200;
+        public int Gold { get; private set; } = 100;
         public int Lives { get; private set; } = 5;
         private Font uiFont = new Font("Arial", 16, FontStyle.Bold);
         public int SelectedTowerType { get; set; } = 1; // 0 = Snajper, 1 = Karabin maszynowy
         private int sidebarWidth = 220;
         public int GetScreenWidth() => map.GetWidth() + sidebarWidth;
         private bool isGameOver = false;
+        private Tower selectedTower = null;
         // --- SYSTEM FAL ---
         private List<Wave> waves = new List<Wave>();
         private int currentWaveIndex = 0;       // Która fala teraz leci?
@@ -31,6 +32,8 @@ namespace TowerDefense
         private bool isWaveActive = false;      // Czy wrogowie aktualnie wychodzą?
         private bool isVictory = false;         // Czy gracz wygrał?
         // ------------------
+        public int GetMapWidth() => map.GetWidth();
+        public int GetMapHeight() => map.GetHeight();
         //--------------------------------------------------------------
         public GameEngine()
         {
@@ -188,12 +191,22 @@ namespace TowerDefense
             map.Draw(g);
             foreach (var enemy in enemies) enemy.Draw(g);
             foreach (var tower in towers) tower.Draw(g);
+
+            // Rysowanie obwódki wokół zaznaczonej wieży
+            if (selectedTower != null)
+            {
+                // Biała ramka
+                g.DrawRectangle(new Pen(Color.White, 3), selectedTower.X - 25, selectedTower.Y - 25, 50, 50);
+                // Kółko zasięgu
+                float r = selectedTower.Range;
+                g.DrawEllipse(Pens.White, selectedTower.X - r, selectedTower.Y - r, r * 2, r * 2);
+            }
+
             foreach (var bullet in bullets) bullet.Draw(g);
             foreach (var explosion in explosions) explosion.Draw(g);
 
-            // --- WIZUALIZACJA ZASIĘGU ---
-            // Rysujemy kółko zasięgu tylko nad mapą
-            if (mousePosition.X < map.GetWidth() && mousePosition.Y < map.GetHeight())
+            // --- WIZUALIZACJA ZASIĘGU (Tylko gdy budujemy, czyli NIE mamy zaznaczonej wieży) ---
+            if (selectedTower == null && mousePosition.X < map.GetWidth() && mousePosition.Y < map.GetHeight())
             {
                 float range = 0;
                 if (SelectedTowerType == 1) range = 200f;      // Sniper
@@ -214,112 +227,117 @@ namespace TowerDefense
             }
 
             // =========================================================
-            // 2. RYSOWANIE PANELU BOCZNEGO (WARSTWA GÓRNA)
+            // 2. RYSOWANIE PANELU BOCZNEGO
             // =========================================================
             int uiX = map.GetWidth();
-            int uiY = 0;
             int height = map.GetHeight();
 
-            // Tło panelu
-            g.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), uiX, uiY, sidebarWidth, height);
+            g.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), uiX, 0, sidebarWidth, height);
             g.DrawLine(Pens.Black, uiX, 0, uiX, height);
 
             // Czcionki
-            Font fontHeader = new Font("Arial", 14, FontStyle.Bold);
-            Font fontSmall = new Font("Arial", 10);
-            Font fontBold = new Font("Arial", 11, FontStyle.Bold);
+            Font fontStats = new Font("Arial", 15, FontStyle.Bold); // DUŻA czcionka dla statystyk
+            Font fontSmall = new Font("Arial", 9);
+            Font fontBold = new Font("Arial", 10, FontStyle.Bold);
 
             int margin = 10;
             int currentY = 15;
 
-            // --- SEKCJA 1: STATYSTYKI ---
+            // --- SEKCJA 1: STATYSTYKI (POWIĘKSZONE) ---
             g.DrawString("STATYSTYKI", fontSmall, Brushes.Gray, uiX + margin, currentY);
             currentY += 20;
-            g.DrawString($"Złoto: {Gold}", fontHeader, Brushes.Gold, uiX + margin, currentY);
-            currentY += 25;
-            g.DrawString($"Życie: {Lives}", fontHeader, Brushes.Crimson, uiX + margin, currentY);
+
+            // ZŁOTO - Duże i Złote
+            g.DrawString($"Złoto: {Gold}", fontStats, Brushes.Gold, uiX + margin, currentY);
             currentY += 25;
 
-            // Informacja o Fali (jeśli masz system fal)
+            // ŻYCIE - Duże i Czerwone
+            g.DrawString($"Życie: {Lives}", fontStats, Brushes.Crimson, uiX + margin, currentY);
+            currentY += 30; // Większy odstęp po statystykach
+
+            // FALA
             if (!isVictory && !isGameOver)
             {
-                // Zakładam, że dodałeś listę 'waves' z poprzedniego kroku.
-                // Jeśli nie masz systemu fal, usuń te dwie linijki poniżej:
-                // string waveInfo = $"Fala: {currentWaveIndex + 1}";
-                // g.DrawString(waveInfo, fontSmall, Brushes.White, uiX + margin, currentY);
-                currentY += 20;
+                string waveInfo = $"Fala: {currentWaveIndex + 1}";
+                if (!isWaveActive && currentWaveIndex < waves.Count)
+                {
+                    float seconds = timeToNextWave / 30f;
+                    waveInfo += $" (Start: {seconds:0.0}s)";
+                }
+                g.DrawString(waveInfo, fontSmall, Brushes.White, uiX + margin, currentY);
+                currentY += 15;
             }
 
-            currentY += 10;
             g.DrawLine(Pens.Gray, uiX + margin, currentY, uiX + sidebarWidth - margin, currentY);
+            currentY += 10;
+
+            // --- SEKCJA 2: SKLEP (KOMPAKTOWA) ---
+            g.DrawString("SKLEP:", fontSmall, Brushes.Gray, uiX + margin, currentY);
             currentY += 15;
 
-            // --- SEKCJA 2: SKLEP (SIATKA PRZYCISKÓW) ---
-            g.DrawString("WYBIERZ WIEŻĘ:", fontSmall, Brushes.Gray, uiX + margin, currentY);
-            currentY += 20;
-
             int btnW = 95;
-            int btnH = 60;
+            int btnH = 45; // Niższe przyciski, żeby wszystko się zmieściło
             int gap = 5;
 
-            // Rząd 1
             DrawTowerButton(g, 1, "SNIPER", SniperTower.Cost, Brushes.Blue, uiX + margin, currentY, btnW, btnH);
             DrawTowerButton(g, 2, "CKM", MachineGunTower.Cost, Brushes.DarkOrange, uiX + margin + btnW + gap, currentY, btnW, btnH);
             currentY += btnH + gap;
 
-            // Rząd 2
             DrawTowerButton(g, 3, "ROCKET", RocketTower.Cost, Brushes.Purple, uiX + margin, currentY, btnW, btnH);
             DrawTowerButton(g, 4, "SLOW", SlowTower.Cost, Brushes.LightSkyBlue, uiX + margin + btnW + gap, currentY, btnW, btnH);
-            currentY += btnH + 20;
+            currentY += btnH + 10;
 
             // --- SEKCJA 3: SZCZEGÓŁY ---
             g.DrawLine(Pens.Gray, uiX + margin, currentY, uiX + sidebarWidth - margin, currentY);
-            currentY += 10;
+            currentY += 5;
 
-            string name = "";
-            string stats = "";
-            string desc = "";
+            if (selectedTower != null)
+            {
+                // ZAZNACZONA WIEŻA
+                g.DrawString($"WIEŻA (Lvl {selectedTower.Level})", fontBold, Brushes.Cyan, uiX + margin, currentY);
+                currentY += 20;
+                g.DrawString($"Obrażenia: {selectedTower.Damage}", fontSmall, Brushes.White, uiX + margin, currentY);
+                currentY += 15;
+                g.DrawString($"Zasięg: {selectedTower.Range:0}", fontSmall, Brushes.White, uiX + margin, currentY);
+                currentY += 20;
 
-            if (SelectedTowerType == 1)
-            {
-                name = "SNIPER TOWER [1]";
-                stats = "Atak: 50 | Zasięg: Duży";
-                desc = "Wolny, ale potężny strzał.\nDobry na silne cele.";
-            }
-            else if (SelectedTowerType == 2)
-            {
-                name = "MACHINE GUN [2]";
-                stats = "Atak: 15 | Zasięg: Mały";
-                desc = "Bardzo szybki ostrzał.\nNiszczy słabych wrogów.";
-            }
-            else if (SelectedTowerType == 3)
-            {
-                name = "ROCKET TOWER [3]";
-                stats = "Atak: 40 | Wybuch!";
-                desc = "Rani wszystkich wrogów\nw miejscu trafienia.";
-            }
-            else if (SelectedTowerType == 4)
-            {
-                name = "SLOW TOWER [4]";
-                stats = "Atak: 5 | Lód";
-                desc = "Spowalnia wrogów o 50%.\nNie zadaje obrażeń.";
-            }
+                // CENA ULEPSZENIA (Wyróżniona)
+                string upgradeText = $"[U] ULEPSZ: ${selectedTower.UpgradeCost}";
+                Brush costBrush = (Gold >= selectedTower.UpgradeCost) ? Brushes.Lime : Brushes.Red;
+                g.DrawString(upgradeText, fontBold, costBrush, uiX + margin, currentY);
 
-            g.DrawString(name, fontBold, Brushes.White, uiX + margin, currentY);
-            currentY += 25;
-            g.DrawString(stats, fontSmall, Brushes.LightGray, uiX + margin, currentY);
-            currentY += 25;
-            g.DrawString(desc, new Font("Arial", 9, FontStyle.Italic), Brushes.Gray, uiX + margin, currentY);
+                if (Gold < selectedTower.UpgradeCost)
+                {
+                    currentY += 15;
+                    g.DrawString("(Brak złota)", fontSmall, Brushes.Red, uiX + margin, currentY);
+                }
+            }
+            else
+            {
+                // OPIS ZE SKLEPU
+                string name = "", stats = "", desc = "";
+                if (SelectedTowerType == 1) { name = "SNIPER"; stats = "Atak: 50 | Zasięg: Duży"; desc = "Wolny, silny strzał."; }
+                else if (SelectedTowerType == 2) { name = "CKM"; stats = "Atak: 15 | Zasięg: Mały"; desc = "Szybki ostrzał."; }
+                else if (SelectedTowerType == 3) { name = "ROCKET"; stats = "Atak: 40 | Wybuch"; desc = "Obrażenia obszarowe."; }
+                else if (SelectedTowerType == 4) { name = "SLOW"; stats = "Atak: 5 | Lód"; desc = "Spowalnia wrogów."; }
+
+                g.DrawString(name, fontBold, Brushes.White, uiX + margin, currentY);
+                currentY += 20;
+                g.DrawString(stats, fontSmall, Brushes.LightGray, uiX + margin, currentY);
+                currentY += 20;
+                g.DrawString(desc, new Font("Arial", 8, FontStyle.Italic), Brushes.Gray, uiX + margin, currentY);
+            }
 
             // =========================================================
-            // 3. EKRANY KOŃCOWE (NA WIERZCHU)
+            // 3. EKRANY KOŃCOWE
             // =========================================================
-
-            // A) PRZEGRANA (GAME OVER)
-            if (isGameOver)
+            if (isGameOver || isVictory)
             {
-                // Ciemne tło na mapę
-                g.FillRectangle(new SolidBrush(Color.FromArgb(200, 0, 0, 0)), 0, 0, map.GetWidth(), map.GetHeight());
+                Color bg = isVictory ? Color.FromArgb(200, 0, 50, 0) : Color.FromArgb(200, 0, 0, 0);
+                string txt = isVictory ? "ZWYCIĘSTWO!" : "GAME OVER";
+                Brush color = isVictory ? Brushes.Lime : Brushes.Red;
+
+                g.FillRectangle(new SolidBrush(bg), 0, 0, map.GetWidth(), map.GetHeight());
 
                 StringFormat sf = new StringFormat();
                 sf.Alignment = StringAlignment.Center;
@@ -327,22 +345,7 @@ namespace TowerDefense
                 int cx = map.GetWidth() / 2;
                 int cy = map.GetHeight() / 2;
 
-                g.DrawString("GAME OVER", new Font("Arial", 48, FontStyle.Bold), Brushes.Red, cx, cy - 50, sf);
-                g.DrawString("Wciśnij 'R' aby zagrać ponownie", new Font("Arial", 24), Brushes.White, cx, cy + 20, sf);
-            }
-            // B) ZWYCIĘSTWO (VICTORY)
-            else if (isVictory)
-            {
-                // Zielone tło na mapę
-                g.FillRectangle(new SolidBrush(Color.FromArgb(200, 0, 50, 0)), 0, 0, map.GetWidth(), map.GetHeight());
-
-                StringFormat sf = new StringFormat();
-                sf.Alignment = StringAlignment.Center;
-                sf.LineAlignment = StringAlignment.Center;
-                int cx = map.GetWidth() / 2;
-                int cy = map.GetHeight() / 2;
-
-                g.DrawString("ZWYCIĘSTWO!", new Font("Arial", 48, FontStyle.Bold), Brushes.Lime, cx, cy - 50, sf);
+                g.DrawString(txt, new Font("Arial", 48, FontStyle.Bold), color, cx, cy - 50, sf);
                 g.DrawString("Wciśnij 'R' aby zagrać ponownie", new Font("Arial", 24), Brushes.White, cx, cy + 20, sf);
             }
         }
@@ -373,48 +376,58 @@ namespace TowerDefense
             g.DrawString($"[{type}]", new Font("Arial", 8), Brushes.Gray, x + w - 20, y + h - 15);
         }
         //--------------------------------------------------------------
-        public int GetMapWidth() => map.GetWidth();
-        public int GetMapHeight() => map.GetHeight();
-        //--------------------------------------------------------------
-        public void TryPlaceTower(int mouseX, int mouseY)
+        public void HandleClick(int mouseX, int mouseY)
         {
+            // 1. Sprawdź, czy kliknęliśmy w istniejącą wieżę (ZAZNACZANIE)
+            foreach (var tower in towers)
+            {
+                // Prosta kolizja: czy myszka jest blisko środka wieży?
+                if (Math.Abs(tower.X - mouseX) < 25 && Math.Abs(tower.Y - mouseY) < 25)
+                {
+                    selectedTower = tower; // Zaznaczamy tę wieżę
+                    return; // Kończymy, nie stawiamy nowej
+                }
+            }
+
+            // 2. Jeśli nie kliknęliśmy w wieżę, to może chcemy postawić nową? (BUDOWANIE)
+            // Odznaczamy poprzednią wieżę, jeśli kliknęliśmy w trawę
+            selectedTower = null;
+
             if (!map.IsGrass(mouseX, mouseY)) return;
 
             int cellSize = map.CellSize;
             int gridX = (mouseX / cellSize) * cellSize + cellSize / 2;
             int gridY = (mouseY / cellSize) * cellSize + cellSize / 2;
 
-            // SPRAWDZAMY WYBÓR I KOSZT
-            if (SelectedTowerType == 1) // Snajper
+            // Sprawdzamy czy w tym miejscu już coś nie stoi (żeby nie stawiać wieży na wieży)
+            foreach (var t in towers)
             {
-                if (Gold >= SniperTower.Cost)
-                {
-                    towers.Add(new SniperTower(gridX, gridY));
-                    Gold -= SniperTower.Cost;
-                }
+                if (t.X == gridX && t.Y == gridY) return;
             }
-            else if (SelectedTowerType == 2) // Machine Gun
+
+            int cost = 0;
+            Tower newTower = null;
+
+            if (SelectedTowerType == 1) { cost = SniperTower.Cost; newTower = new SniperTower(gridX, gridY); }
+            else if (SelectedTowerType == 2) { cost = MachineGunTower.Cost; newTower = new MachineGunTower(gridX, gridY); }
+            else if (SelectedTowerType == 3) { cost = RocketTower.Cost; newTower = new RocketTower(gridX, gridY); }
+            else if (SelectedTowerType == 4) { cost = SlowTower.Cost; newTower = new SlowTower(gridX, gridY); }
+
+            if (Gold >= cost && newTower != null)
             {
-                if (Gold >= MachineGunTower.Cost)
-                {
-                    towers.Add(new MachineGunTower(gridX, gridY));
-                    Gold -= MachineGunTower.Cost;
-                }
+                towers.Add(newTower);
+                Gold -= cost;
             }
-            else if (SelectedTowerType == 3) // Rocket Tower
+        }
+        //--------------------------------------------------------------
+        public void TryUpgradeTower()
+        {
+            if (selectedTower != null)
             {
-                if (Gold >= RocketTower.Cost)
+                if (Gold >= selectedTower.UpgradeCost)
                 {
-                    towers.Add(new RocketTower(gridX, gridY));
-                    Gold -= RocketTower.Cost;
-                }
-            }
-            else if (SelectedTowerType == 4) // Slow Tower
-            {
-                if (Gold >= SlowTower.Cost)
-                {
-                    towers.Add(new SlowTower(gridX, gridY));
-                    Gold -= SlowTower.Cost;
+                    Gold -= selectedTower.UpgradeCost;
+                    selectedTower.Upgrade();
                 }
             }
         }
@@ -427,7 +440,6 @@ namespace TowerDefense
             Gold = 100;
             Lives = 5;
             isGameOver = false;
-            enemySpawnTimer = 0;
             explosions.Clear();
 
             isVictory = false;

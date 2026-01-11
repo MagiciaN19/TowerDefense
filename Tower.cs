@@ -11,12 +11,12 @@ namespace TowerDefense
     {
         public int X { get; protected set; }
         public int Y { get; protected set; }
-
         public float Range { get; protected set; }
         public int Damage { get; protected set; }
         public int ReloadTime { get; protected set; }
-
         protected int currentCoolDown;
+        public int Level { get; protected set; } = 1;
+        public int UpgradeCost { get; protected set; } = 50;
 
         public Tower(int x, int y)
         {
@@ -56,6 +56,14 @@ namespace TowerDefense
 
             return null;
 
+        }
+
+        public void Upgrade()
+        {
+            Level++;
+            Damage += 10;       // Zwiększamy obrażenia
+            Range += 20f;       // Zwiększamy zasięg
+            UpgradeCost += 50;  // Kolejne ulepszenie jest droższe
         }
 
         public abstract void Draw(Graphics g);

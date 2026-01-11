@@ -43,7 +43,7 @@ namespace TowerDefense
 
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
-            gameEngine.TryPlaceTower(e.X, e.Y);
+            gameEngine.HandleClick(e.X, e.Y);
             this.Invalidate();
         }
 
@@ -69,8 +69,12 @@ namespace TowerDefense
             {
                 gameEngine.ResetGame();
             }
+            else if (e.KeyCode == Keys.U) // Klawisz "U"
+            {
+                gameEngine.TryUpgradeTower();
+            }
 
-            this.Invalidate();
+                this.Invalidate();
         }
     }
 }
