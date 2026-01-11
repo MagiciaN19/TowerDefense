@@ -11,7 +11,17 @@ namespace TowerDefense
     {
         public float X { get; protected set; }
         public float Y { get; protected set; }
-        public float Speed { get; protected set; }
+        private float baseSpeed;
+        public float Speed
+        {
+            get
+            {
+                if (freezeTimer > 0) return baseSpeed * 0.5f;
+                return baseSpeed;
+            }
+            protected set { baseSpeed = value; }
+        }
+        private int freezeTimer = 0;
         public int Health { get; set; }
         public int MaxHealth { get; protected set; }
         protected int Size;
@@ -29,8 +39,19 @@ namespace TowerDefense
                 Y = waypoints[0].Y;
             }
         }
+
+        public void Freeze(int duration)
+        {
+            freezeTimer = duration;
+        }
+
         public virtual void Move()
         {
+            if (freezeTimer > 0)
+            {
+                freezeTimer--;
+            }
+
             if (HasReachedEnd) return;
             
             if (waypoints == null || currentWaypointIndex >= waypoints.Count - 1)

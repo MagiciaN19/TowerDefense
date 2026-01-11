@@ -61,6 +61,10 @@ namespace TowerDefense
             {
                 gameEngine.SelectedTowerType = 3;
             }
+            else if (e.KeyCode == Keys.D4) // Klawisz "4"
+            {
+                gameEngine.SelectedTowerType = 4;
+            }
             else if (e.KeyCode == Keys.R) // Klawisz "R" - Restart gry
             {
                 gameEngine.ResetGame();

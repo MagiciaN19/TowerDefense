@@ -7,15 +7,15 @@ using System.Drawing;
 
 namespace TowerDefense
 {
-    public class RocketTower : Tower
+    public class SlowTower : Tower
     {
-        public static int Cost = 100;
+        public static int Cost = 70;
 
-        public RocketTower(int x, int y) : base(x, y)
+        public SlowTower(int x, int y) : base(x, y)
         {
-            Range = 150f;      // Średni zasięg
-            Damage = 40;       // Obrażenia mniejsze niż snajper, ale obszarowe!
-            ReloadTime = 90;   // Wolne przeładowanie (co 3 sekundy)
+            Range = 130f;
+            Damage = 5;       // Symboliczne obrażenia
+            ReloadTime = 45;  // Średnia szybkostrzelność
         }
 
         public override Bullet Update(List<Enemy> enemies)
@@ -45,18 +45,19 @@ namespace TowerDefense
             if (nearestEnemy != null)
             {
                 currentCoolDown = ReloadTime;
-                return new Bullet(X, Y, nearestEnemy, Damage, 50);
+                return new Bullet(X, Y, nearestEnemy, Damage, 0, 120);
             }
-
             return null;
         }
 
         public override void Draw(Graphics g)
         {
-            g.FillRectangle(Brushes.Purple, X - 20, Y - 20, 40, 40);
-            g.DrawRectangle(Pens.Black, X - 20, Y - 20, 40, 40);
+            // Błękitny romb lub kółko
+            g.FillRectangle(Brushes.LightSkyBlue, X - 15, Y - 15, 30, 30);
+            g.DrawRectangle(Pens.Blue, X - 15, Y - 15, 30, 30);
 
-            g.FillEllipse(Brushes.Gray, X - 10, Y - 10, 20, 20);
+            // "Kryształ" w środku
+            g.FillEllipse(Brushes.White, X - 5, Y - 5, 10, 10);
         }
     }
 }

@@ -14,15 +14,17 @@ namespace TowerDefense
 
         private float speed = 12f;
         public bool HasHit { get; private set; } = false;
+        public int FreezeDuration { get; private set; }
 
 
-        public Bullet(float startX, float startY, Enemy target, int damage, int explosionRadius = 0)
+        public Bullet(float startX, float startY, Enemy target, int damage, int explosionRadius = 0, int freezeDuration = 0)
         {
             X = startX;
             Y = startY;
             Target = target;
             Damage = damage;
             ExplosionRadius = explosionRadius;
+            FreezeDuration = freezeDuration;
         }
 
         public void Move(List<Enemy> allEnemies)
@@ -62,6 +64,10 @@ namespace TowerDefense
                 {
                     // Zwykły pocisk (tylko jeden cel)
                     Target.Health -= Damage;
+                    if (FreezeDuration > 0)
+                    {
+                        Target.Freeze(FreezeDuration);
+                    }
                 }
             }
             else
@@ -77,6 +83,10 @@ namespace TowerDefense
             {
                 // Rakieta jest większa i ciemniejsza
                 g.FillEllipse(Brushes.Black, X - 5, Y - 5, 10, 10);
+            }
+            else if (FreezeDuration > 0) // Lód
+            {
+                g.FillEllipse(Brushes.Cyan, X - 3, Y - 3, 6, 6);
             }
             else
             {
