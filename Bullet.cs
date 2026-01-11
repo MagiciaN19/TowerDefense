@@ -1,11 +1,6 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TowerDefense;
 
 namespace TowerDefense
 {
@@ -15,22 +10,24 @@ namespace TowerDefense
         public float Y { get; private set; }
         public int Damage { get; private set; }
         public Enemy Target { get; private set; }
+        public int ExplosionRadius { get; private set; }
 
-        private float speed = 10f;
-
+        private float speed = 12f;
         public bool HasHit { get; private set; } = false;
 
-        public Bullet(float startX, float startY, Enemy target, int damage)
+
+        public Bullet(float startX, float startY, Enemy target, int damage, int explosionRadius = 0)
         {
             X = startX;
             Y = startY;
             Target = target;
             Damage = damage;
+            ExplosionRadius = explosionRadius;
         }
 
-        public void Move()
+        public void Move(List<Enemy> allEnemies)
         {
-            if (Target == null)
+            if (Target == null || !allEnemies.Contains(Target))
             {
                 HasHit = true;
                 return;
@@ -43,11 +40,32 @@ namespace TowerDefense
             if (distance < speed)
             {
                 HasHit = true;
-                Target.Health -= Damage; // Zadajemy obrażenia wrogowi
+
+                // --- LOGIKA WYBUCHU ---
+                if (ExplosionRadius > 0)
+                {
+                    // Szukamy wszystkich wrogów w promieniu wybuchu
+                    foreach (var enemy in allEnemies)
+                    {
+                        // Liczymy odległość pocisku od wroga
+                        float ex = enemy.X - X;
+                        float ey = enemy.Y - Y;
+                        float distToEnemy = (float)Math.Sqrt(ex * ex + ey * ey);
+
+                        if (distToEnemy <= ExplosionRadius)
+                        {
+                            enemy.Health -= Damage;
+                        }
+                    }
+                }
+                else
+                {
+                    // Zwykły pocisk (tylko jeden cel)
+                    Target.Health -= Damage;
+                }
             }
             else
             {
-                // 3. Lot w stronę wroga
                 X += (dx / distance) * speed;
                 Y += (dy / distance) * speed;
             }
@@ -55,8 +73,16 @@ namespace TowerDefense
 
         public void Draw(Graphics g)
         {
-            // Rysujemy małą żółtą kropkę
-            g.FillEllipse(Brushes.Yellow, X - 3, Y - 3, 6, 6);
+            if (ExplosionRadius > 0)
+            {
+                // Rakieta jest większa i ciemniejsza
+                g.FillEllipse(Brushes.Black, X - 5, Y - 5, 10, 10);
+            }
+            else
+            {
+                // Zwykły pocisk
+                g.FillEllipse(Brushes.Yellow, X - 3, Y - 3, 6, 6);
+            }
         }
     }
 }

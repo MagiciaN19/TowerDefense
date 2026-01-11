@@ -9,6 +9,7 @@ namespace TowerDefense
 {
     public class SniperTower : Tower
     {
+        public static int Cost = 50;
         public SniperTower(int x, int y) : base(x, y)
         {
             Range = 200f;

@@ -48,6 +48,9 @@ namespace TowerDefense
             // 7. W dół (kolumna 1, koniec mapy)
             points.Add(new Point(1 * CellSize + offset, 7 * CellSize + offset));
 
+            // 8. W dół (kolumna 1, poza mapę)
+            points.Add(new Point(1 * CellSize + offset, 8 * CellSize + offset));
+
             return points;
         }
 

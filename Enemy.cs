@@ -13,9 +13,13 @@ namespace TowerDefense
         public float Y { get; protected set; }
         public float Speed { get; protected set; }
         public int Health { get; set; }
+        public int MaxHealth { get; protected set; }
         protected int Size;
         private List<Point> waypoints;
         private int currentWaypointIndex;
+        public bool HasReachedEnd => waypoints != null && currentWaypointIndex >= waypoints.Count - 1;
+        public int Reward { get; protected set; }
+
         public Enemy(List<Point> path)
         {
             this.waypoints = path;
@@ -27,6 +31,8 @@ namespace TowerDefense
         }
         public virtual void Move()
         {
+            if (HasReachedEnd) return;
+            
             if (waypoints == null || currentWaypointIndex >= waypoints.Count - 1)
                 return;
 
@@ -47,6 +53,26 @@ namespace TowerDefense
                 X += (dx / distance) * Speed;
                 Y += (dy / distance) * Speed;
             }
+        }
+
+        protected void DrawHealthBar(Graphics g)
+        {
+            // Obliczamy procent życia (0.0 do 1.0)
+            float healthPercentage = (float)Health / MaxHealth;
+            if (healthPercentage < 0) healthPercentage = 0;
+
+            // Ustawienia paska
+            int barWidth = Size;          // Pasek szeroki jak wróg
+            int barHeight = 5;
+            int barX = (int)X - Size / 2; // Pozycja X (wyrównana do wroga)
+            int barY = (int)Y - Size / 2 - 10; // Pozycja Y (troszkę nad głową)
+
+            g.FillRectangle(Brushes.Red, barX, barY, barWidth, barHeight);
+
+            int greenWidth = (int)(barWidth * healthPercentage);
+            g.FillRectangle(Brushes.Lime, barX, barY, greenWidth, barHeight);
+
+            g.DrawRectangle(Pens.Black, barX, barY, barWidth, barHeight);
         }
         public abstract void Draw(Graphics g);
     }
