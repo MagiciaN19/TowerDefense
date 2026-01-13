@@ -13,8 +13,6 @@ namespace TowerDefense
             SetupForm();
 
             this.KeyPreview = true;
-            this.KeyDown += Form1_KeyDown;
-            this.MouseClick += Form1_MouseClick;
             this.MouseMove += (s, e) => { this.Invalidate(); };
 
             GameTimer.Start();
@@ -73,8 +71,16 @@ namespace TowerDefense
             {
                 gameEngine.TryUpgradeTower();
             }
+            else if (e.KeyCode == Keys.S) // Klawisz "S"
+            {
+                gameEngine.SellSelectedTower();
+            }
+            else if (e.KeyCode == Keys.P) // Klawisz "P"
+            {
+                gameEngine.TogglePause();
+            }
 
-                this.Invalidate();
+            this.Invalidate();
         }
     }
 }

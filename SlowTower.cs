@@ -58,6 +58,8 @@ namespace TowerDefense
 
             // "Kryształ" w środku
             g.FillEllipse(Brushes.White, X - 5, Y - 5, 10, 10);
+
+            DrawLevelStars(g);
         }
     }
 }

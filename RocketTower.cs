@@ -57,6 +57,8 @@ namespace TowerDefense
             g.DrawRectangle(Pens.Black, X - 20, Y - 20, 40, 40);
 
             g.FillEllipse(Brushes.Gray, X - 10, Y - 10, 20, 20);
+
+            DrawLevelStars(g);
         }
     }
 }

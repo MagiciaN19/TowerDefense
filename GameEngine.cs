@@ -11,64 +11,161 @@ namespace TowerDefense
 {
     public class GameEngine
     {
+        // --- 1. REFERENCJA DO RENDERERA ---
+        private GameRenderer renderer;
+
+        // --- 2. MAPA I OBIEKTY GRY ---
+
         private GameMap map;
+        public GameMap Map => map;
+
         private List<Enemy> enemies = new List<Enemy>();
+        public List<Enemy> Enemies => enemies;
+
         private List<Tower> towers = new List<Tower>();
+        public List<Tower> Towers => towers;
+
         private List<Bullet> bullets = new List<Bullet>();
+        public List<Bullet> Bullets => bullets;
+
         private List<Explosion> explosions = new List<Explosion>();
-        public int Gold { get; private set; } = 100;
-        public int Lives { get; private set; } = 5;
-        private Font uiFont = new Font("Arial", 16, FontStyle.Bold);
-        public int SelectedTowerType { get; set; } = 1; // 0 = Snajper, 1 = Karabin maszynowy
-        private int sidebarWidth = 220;
-        public int GetScreenWidth() => map.GetWidth() + sidebarWidth;
-        private bool isGameOver = false;
+        public List<Explosion> Explosions => explosions;
+
+        // --- 3. STATYSTYKI GRACZA ---
+        public int Gold { get; set; } = 300;
+        public int Lives { get; set; } = 10;
+
+        // --- 4. ZMIENNE UI I KONFIGURACJI ---
+        public int SelectedTowerType { get; set; } = 1;
+
         private Tower selectedTower = null;
-        // --- SYSTEM FAL ---
+        public Tower SelectedTower => selectedTower;
+
+        private int sidebarWidth = 220;
+        public int SidebarWidth => sidebarWidth;
+
+        // Konfiguracja poziomu trudności
+        public int SelectedDifficulty { get; set; } = 1;
+        public int SelectedWaveCount { get; set; } = 5;
+
+        // --- 5. STANY GRY (MENU, PAUZA, KONIEC) ---
+
+        private bool isMenu = true;
+        public bool IsMenu { get { return isMenu; } set { isMenu = value; } }
+
+        private bool isPaused = false;
+        public bool IsPaused => isPaused;
+
+        private bool isGameOver = false;
+        public bool IsGameOver => isGameOver;
+
+        private bool isVictory = false;
+        public bool IsVictory => isVictory;
+
+        // --- 6. SYSTEM FAL ---
         private List<Wave> waves = new List<Wave>();
-        private int currentWaveIndex = 0;       // Która fala teraz leci?
-        private int timeToNextWave = 150;       // Czas do startu pierwszej fali (ok. 5 sek)
-        private int spawnTimer = 0;             // Licznik do wypuszczania pojedynczych wrogów
-        private bool isWaveActive = false;      // Czy wrogowie aktualnie wychodzą?
-        private bool isVictory = false;         // Czy gracz wygrał?
-        // ------------------
+        public List<Wave> Waves => waves;
+
+        private int currentWaveIndex = 0;
+        public int CurrentWaveIndex => currentWaveIndex;
+
+        private int timeToNextWave = 150;
+        public int TimeToNextWave => timeToNextWave;
+
+        private bool isWaveActive = false;
+        public bool IsWaveActive => isWaveActive;
+
+        private int spawnTimer = 0;
+
+        // Pomocnicze metody wymiarów
+        public int GetScreenWidth() => map.GetWidth() + sidebarWidth;
         public int GetMapWidth() => map.GetWidth();
         public int GetMapHeight() => map.GetHeight();
-        //--------------------------------------------------------------
+
+        // ---------------------------------------------------------
+        // KONIEC SEKCJI ZMIENNYCH
+        // ---------------------------------------------------------
         public GameEngine()
         {
             map = new GameMap();
-            InitializeWaves();
+            renderer = new GameRenderer(this);
         }
         //--------------------------------------------------------------
         private void InitializeWaves()
         {
+            // Czyścimy stare fale
+            waves.Clear();
+
+            // Mnożniki trudności
+            float countMultiplier = 1.0f; // Ile wrogów?
+            int speedInterval = 40;       // Jak szybko wychodzą? (mniej = szybciej)
+
+            // Ustawienia startowe w zależności od trudności
+            if (SelectedDifficulty == 0) // ŁATWY
+            {
+                Gold = 300;     // Bogaty start
+                Lives = 10;     // Dużo życia
+                countMultiplier = 0.8f; // Mniej wrogów (-20%)
+                speedInterval = 60;     // Wolne wychodzenie
+            }
+            else if (SelectedDifficulty == 1) // ŚREDNI
+            {
+                Gold = 200;
+                Lives = 5;
+                countMultiplier = 1.0f; // Standard
+                speedInterval = 40;
+            }
+            else // TRUDNY
+            {
+                Gold = 150;     // Biedny start
+                Lives = 1;      // Jeden błąd i koniec!
+                countMultiplier = 1.5f; // Dużo wrogów (+50%)
+                speedInterval = 25;     // Bardzo szybki atak
+            }
+
             var path = map.GetWaypoints();
 
-            // --- FALA 1: Rozgrzewka (5 normalnych wrogów, wolno) ---
-            Wave wave1 = new Wave(60); // Odstęp 60 klatek (2 sekundy)
-            for (int i = 0; i < 5; i++) wave1.AddEnemy(new NormalEnemy(path));
-            waves.Add(wave1);
+            // --- GENEROWANIE FAL W PĘTLI ---
+            for (int i = 1; i <= SelectedWaveCount; i++)
+            {
+                Wave newWave = new Wave(speedInterval);
 
-            // --- FALA 2: Szybki atak (8 szybkich wrogów, gęsto) ---
-            Wave wave2 = new Wave(30); // Odstęp 30 klatek (1 sekunda)
-            for (int i = 0; i < 8; i++) wave2.AddEnemy(new FastEnemy(path));
-            waves.Add(wave2);
+                // Obliczamy bazową ilość wrogów dla tej fali (np. fala 1 = 5 wrogów, fala 10 = 14 wrogów)
+                int baseCount = 4 + i;
 
-            // --- FALA 3: Czołgi i wsparcie (3 Czołgi i 5 Szybkich) ---
-            Wave wave3 = new Wave(50);
-            wave3.AddEnemy(new TankEnemy(path)); // Czołg na start
-            for (int i = 0; i < 5; i++) wave3.AddEnemy(new FastEnemy(path));
-            wave3.AddEnemy(new TankEnemy(path)); // Czołg na koniec
-            wave3.AddEnemy(new TankEnemy(path));
-            waves.Add(wave3);
+                // Aplikujemy mnożnik trudności
+                int finalCount = (int)(baseCount * countMultiplier);
+
+                // -- LOGIKA SKŁADU FALI --
+                for (int j = 0; j < finalCount; j++)
+                {
+                    // Co 3 fale dochodzą trudniejsi wrogowie
+                    if (i % 3 == 0 && j < i) // Np. w 3, 6, 9 fali dodaj Czołgi
+                    {
+                        newWave.AddEnemy(new TankEnemy(path));
+                    }
+                    else if (i > 1 && j % 2 == 0) // Od 2 fali co drugi to szybki
+                    {
+                        newWave.AddEnemy(new FastEnemy(path));
+                    }
+                    else
+                    {
+                        newWave.AddEnemy(new NormalEnemy(path));
+                    }
+                }
+
+                waves.Add(newWave);
+            }
         }
         //--------------------------------------------------------------
         public void Update()
         {
-            if (isGameOver) return;
+            if (isMenu) return;
 
-            if (isVictory) return;
+            if (isPaused) return;
+
+            if (isGameOver || isVictory) return;
+
             // Sprawdzamy, czy wciąż są fale do rozegrania
             if (currentWaveIndex < waves.Count)
             {
@@ -185,226 +282,77 @@ namespace TowerDefense
         //--------------------------------------------------------------
         public void Draw(Graphics g, Point mousePosition)
         {
-            // =========================================================
-            // 1. RYSOWANIE GRY (WARSTWA DOLNA)
-            // =========================================================
-            map.Draw(g);
-            foreach (var enemy in enemies) enemy.Draw(g);
-            foreach (var tower in towers) tower.Draw(g);
-
-            // Rysowanie obwódki wokół zaznaczonej wieży
-            if (selectedTower != null)
-            {
-                // Biała ramka
-                g.DrawRectangle(new Pen(Color.White, 3), selectedTower.X - 25, selectedTower.Y - 25, 50, 50);
-                // Kółko zasięgu
-                float r = selectedTower.Range;
-                g.DrawEllipse(Pens.White, selectedTower.X - r, selectedTower.Y - r, r * 2, r * 2);
-            }
-
-            foreach (var bullet in bullets) bullet.Draw(g);
-            foreach (var explosion in explosions) explosion.Draw(g);
-
-            // --- WIZUALIZACJA ZASIĘGU (Tylko gdy budujemy, czyli NIE mamy zaznaczonej wieży) ---
-            if (selectedTower == null && mousePosition.X < map.GetWidth() && mousePosition.Y < map.GetHeight())
-            {
-                float range = 0;
-                if (SelectedTowerType == 1) range = 200f;      // Sniper
-                else if (SelectedTowerType == 2) range = 120f; // CKM
-                else if (SelectedTowerType == 3) range = 150f; // Rocket
-                else if (SelectedTowerType == 4) range = 130f; // Slow
-
-                int cellSize = map.CellSize;
-                int gridX = (mousePosition.X / cellSize) * cellSize + cellSize / 2;
-                int gridY = (mousePosition.Y / cellSize) * cellSize + cellSize / 2;
-
-                using (Brush rangeBrush = new SolidBrush(Color.FromArgb(50, 255, 255, 255)))
-                using (Pen rangePen = new Pen(Color.White, 1))
-                {
-                    g.FillEllipse(rangeBrush, gridX - range, gridY - range, range * 2, range * 2);
-                    g.DrawEllipse(rangePen, gridX - range, gridY - range, range * 2, range * 2);
-                }
-            }
-
-            // =========================================================
-            // 2. RYSOWANIE PANELU BOCZNEGO
-            // =========================================================
-            int uiX = map.GetWidth();
-            int height = map.GetHeight();
-
-            g.FillRectangle(new SolidBrush(Color.FromArgb(50, 50, 50)), uiX, 0, sidebarWidth, height);
-            g.DrawLine(Pens.Black, uiX, 0, uiX, height);
-
-            // Czcionki
-            Font fontStats = new Font("Arial", 15, FontStyle.Bold); // DUŻA czcionka dla statystyk
-            Font fontSmall = new Font("Arial", 9);
-            Font fontBold = new Font("Arial", 10, FontStyle.Bold);
-
-            int margin = 10;
-            int currentY = 15;
-
-            // --- SEKCJA 1: STATYSTYKI (POWIĘKSZONE) ---
-            g.DrawString("STATYSTYKI", fontSmall, Brushes.Gray, uiX + margin, currentY);
-            currentY += 20;
-
-            // ZŁOTO - Duże i Złote
-            g.DrawString($"Złoto: {Gold}", fontStats, Brushes.Gold, uiX + margin, currentY);
-            currentY += 25;
-
-            // ŻYCIE - Duże i Czerwone
-            g.DrawString($"Życie: {Lives}", fontStats, Brushes.Crimson, uiX + margin, currentY);
-            currentY += 30; // Większy odstęp po statystykach
-
-            // FALA
-            if (!isVictory && !isGameOver)
-            {
-                string waveInfo = $"Fala: {currentWaveIndex + 1}";
-                if (!isWaveActive && currentWaveIndex < waves.Count)
-                {
-                    float seconds = timeToNextWave / 30f;
-                    waveInfo += $" (Start: {seconds:0.0}s)";
-                }
-                g.DrawString(waveInfo, fontSmall, Brushes.White, uiX + margin, currentY);
-                currentY += 15;
-            }
-
-            g.DrawLine(Pens.Gray, uiX + margin, currentY, uiX + sidebarWidth - margin, currentY);
-            currentY += 10;
-
-            // --- SEKCJA 2: SKLEP (KOMPAKTOWA) ---
-            g.DrawString("SKLEP:", fontSmall, Brushes.Gray, uiX + margin, currentY);
-            currentY += 15;
-
-            int btnW = 95;
-            int btnH = 45; // Niższe przyciski, żeby wszystko się zmieściło
-            int gap = 5;
-
-            DrawTowerButton(g, 1, "SNIPER", SniperTower.Cost, Brushes.Blue, uiX + margin, currentY, btnW, btnH);
-            DrawTowerButton(g, 2, "CKM", MachineGunTower.Cost, Brushes.DarkOrange, uiX + margin + btnW + gap, currentY, btnW, btnH);
-            currentY += btnH + gap;
-
-            DrawTowerButton(g, 3, "ROCKET", RocketTower.Cost, Brushes.Purple, uiX + margin, currentY, btnW, btnH);
-            DrawTowerButton(g, 4, "SLOW", SlowTower.Cost, Brushes.LightSkyBlue, uiX + margin + btnW + gap, currentY, btnW, btnH);
-            currentY += btnH + 10;
-
-            // --- SEKCJA 3: SZCZEGÓŁY ---
-            g.DrawLine(Pens.Gray, uiX + margin, currentY, uiX + sidebarWidth - margin, currentY);
-            currentY += 5;
-
-            if (selectedTower != null)
-            {
-                // ZAZNACZONA WIEŻA
-                g.DrawString($"WIEŻA (Lvl {selectedTower.Level})", fontBold, Brushes.Cyan, uiX + margin, currentY);
-                currentY += 20;
-                g.DrawString($"Obrażenia: {selectedTower.Damage}", fontSmall, Brushes.White, uiX + margin, currentY);
-                currentY += 15;
-                g.DrawString($"Zasięg: {selectedTower.Range:0}", fontSmall, Brushes.White, uiX + margin, currentY);
-                currentY += 20;
-
-                // CENA ULEPSZENIA (Wyróżniona)
-                string upgradeText = $"[U] ULEPSZ: ${selectedTower.UpgradeCost}";
-                Brush costBrush = (Gold >= selectedTower.UpgradeCost) ? Brushes.Lime : Brushes.Red;
-                g.DrawString(upgradeText, fontBold, costBrush, uiX + margin, currentY);
-
-                if (Gold < selectedTower.UpgradeCost)
-                {
-                    currentY += 15;
-                    g.DrawString("(Brak złota)", fontSmall, Brushes.Red, uiX + margin, currentY);
-                }
-            }
-            else
-            {
-                // OPIS ZE SKLEPU
-                string name = "", stats = "", desc = "";
-                if (SelectedTowerType == 1) { name = "SNIPER"; stats = "Atak: 50 | Zasięg: Duży"; desc = "Wolny, silny strzał."; }
-                else if (SelectedTowerType == 2) { name = "CKM"; stats = "Atak: 15 | Zasięg: Mały"; desc = "Szybki ostrzał."; }
-                else if (SelectedTowerType == 3) { name = "ROCKET"; stats = "Atak: 40 | Wybuch"; desc = "Obrażenia obszarowe."; }
-                else if (SelectedTowerType == 4) { name = "SLOW"; stats = "Atak: 5 | Lód"; desc = "Spowalnia wrogów."; }
-
-                g.DrawString(name, fontBold, Brushes.White, uiX + margin, currentY);
-                currentY += 20;
-                g.DrawString(stats, fontSmall, Brushes.LightGray, uiX + margin, currentY);
-                currentY += 20;
-                g.DrawString(desc, new Font("Arial", 8, FontStyle.Italic), Brushes.Gray, uiX + margin, currentY);
-            }
-
-            // =========================================================
-            // 3. EKRANY KOŃCOWE
-            // =========================================================
-            if (isGameOver || isVictory)
-            {
-                Color bg = isVictory ? Color.FromArgb(200, 0, 50, 0) : Color.FromArgb(200, 0, 0, 0);
-                string txt = isVictory ? "ZWYCIĘSTWO!" : "GAME OVER";
-                Brush color = isVictory ? Brushes.Lime : Brushes.Red;
-
-                g.FillRectangle(new SolidBrush(bg), 0, 0, map.GetWidth(), map.GetHeight());
-
-                StringFormat sf = new StringFormat();
-                sf.Alignment = StringAlignment.Center;
-                sf.LineAlignment = StringAlignment.Center;
-                int cx = map.GetWidth() / 2;
-                int cy = map.GetHeight() / 2;
-
-                g.DrawString(txt, new Font("Arial", 48, FontStyle.Bold), color, cx, cy - 50, sf);
-                g.DrawString("Wciśnij 'R' aby zagrać ponownie", new Font("Arial", 24), Brushes.White, cx, cy + 20, sf);
-            }
+            renderer.Draw(g, mousePosition);
         }
-
-        // POMOCNICZA METODA DO RYSOWANIA PRZYCISKU (Dodaj ją też do klasy GameEngine)
-        private void DrawTowerButton(Graphics g, int type, string name, int cost, Brush color, int x, int y, int w, int h)
-        {
-            // Czy ta wieża jest wybrana?
-            bool isSelected = (SelectedTowerType == type);
-
-            // Tło przycisku (jeśli wybrane, to jaśniejsze tło)
-            Brush bg = isSelected ? new SolidBrush(Color.FromArgb(80, 80, 80)) : new SolidBrush(Color.FromArgb(40, 40, 40));
-            g.FillRectangle(bg, x, y, w, h);
-
-            // Ramka (Zielona jeśli wybrana, czarna jeśli nie)
-            Pen border = isSelected ? new Pen(Color.Lime, 2) : Pens.Black;
-            g.DrawRectangle(border, x, y, w, h);
-
-            // Mały kolorowy kwadracik symbolizujący wieżę
-            g.FillRectangle(color, x + 5, y + 5, 10, 10);
-
-            // Napisy
-            Font fontName = new Font("Arial", 9, FontStyle.Bold);
-            Font fontCost = new Font("Arial", 9);
-
-            g.DrawString(name, fontName, isSelected ? Brushes.Lime : Brushes.White, x + 20, y + 3);
-            g.DrawString($"${cost}", fontCost, (Gold >= cost) ? Brushes.Gold : Brushes.Red, x + 5, y + 25);
-            g.DrawString($"[{type}]", new Font("Arial", 8), Brushes.Gray, x + w - 20, y + h - 15);
-        }
-        //--------------------------------------------------------------
+        // --------------------------------------------------------------
         public void HandleClick(int mouseX, int mouseY)
         {
-            // 1. Sprawdź, czy kliknęliśmy w istniejącą wieżę (ZAZNACZANIE)
+            // --- CZĘŚĆ 1: OBSŁUGA MENU ---
+            if (isMenu)
+            {
+                int cx = GetScreenWidth() / 2;
+                int cy = GetMapHeight() / 2;
+
+                // 1. Kliknięcie w TRUDNOŚĆ
+                if (mouseY >= cy - 40 && mouseY <= cy)
+                {
+                    if (Math.Abs(mouseX - (cx - 120)) < 50) SelectedDifficulty = 0;
+                    if (Math.Abs(mouseX - cx) < 50) SelectedDifficulty = 1;
+                    if (Math.Abs(mouseX - (cx + 120)) < 50) SelectedDifficulty = 2;
+                }
+
+                // 2. Kliknięcie w FALE
+                if (mouseY >= cy + 50 && mouseY <= cy + 90)
+                {
+                    if (Math.Abs(mouseX - (cx - 120)) < 50) SelectedWaveCount = 5;
+                    if (Math.Abs(mouseX - cx) < 50) SelectedWaveCount = 10;
+                    if (Math.Abs(mouseX - (cx + 120)) < 50) SelectedWaveCount = 20;
+                }
+
+                // 3. Kliknięcie w START
+                if (mouseX >= cx - 100 && mouseX <= cx + 100 &&
+                    mouseY >= cy + 110 && mouseY <= cy + 170)
+                {
+                    InitializeWaves();
+                    isMenu = false;
+                }
+                return;
+            }
+
+            // --- CZĘŚĆ 2: GRA WŁAŚCIWA ---
+
+            // Jeśli pauza, nie reaguj na kliknięcia w mapę
+            if (isPaused) return;
+
+            // A. Sprawdzamy, czy kliknięto w istniejącą wieżę (ZAZNACZANIE)
             foreach (var tower in towers)
             {
-                // Prosta kolizja: czy myszka jest blisko środka wieży?
+                // Czy kliknięto blisko środka wieży? (zakładamy promień 25px)
                 if (Math.Abs(tower.X - mouseX) < 25 && Math.Abs(tower.Y - mouseY) < 25)
                 {
-                    selectedTower = tower; // Zaznaczamy tę wieżę
-                    return; // Kończymy, nie stawiamy nowej
+                    selectedTower = tower;
+                    return;
                 }
             }
 
-            // 2. Jeśli nie kliknęliśmy w wieżę, to może chcemy postawić nową? (BUDOWANIE)
-            // Odznaczamy poprzednią wieżę, jeśli kliknęliśmy w trawę
+            // B. Jeśli nie kliknęliśmy w wieżę -> Odznaczamy i próbujemy BUDOWAĆ
             selectedTower = null;
 
+            // Czy to jest trawa?
             if (!map.IsGrass(mouseX, mouseY)) return;
 
+            // Obliczamy środek kratki
             int cellSize = map.CellSize;
             int gridX = (mouseX / cellSize) * cellSize + cellSize / 2;
             int gridY = (mouseY / cellSize) * cellSize + cellSize / 2;
 
-            // Sprawdzamy czy w tym miejscu już coś nie stoi (żeby nie stawiać wieży na wieży)
+            // Sprawdź czy w tym miejscu już coś nie stoi (kolizja dokładna)
             foreach (var t in towers)
             {
                 if (t.X == gridX && t.Y == gridY) return;
             }
 
+            // Wybór typu wieży i kosztu
             int cost = 0;
             Tower newTower = null;
 
@@ -413,6 +361,7 @@ namespace TowerDefense
             else if (SelectedTowerType == 3) { cost = RocketTower.Cost; newTower = new RocketTower(gridX, gridY); }
             else if (SelectedTowerType == 4) { cost = SlowTower.Cost; newTower = new SlowTower(gridX, gridY); }
 
+            // Kupno
             if (Gold >= cost && newTower != null)
             {
                 towers.Add(newTower);
@@ -424,7 +373,7 @@ namespace TowerDefense
         {
             if (selectedTower != null)
             {
-                if (Gold >= selectedTower.UpgradeCost)
+                if (selectedTower.Level < Tower.MaxLevel && Gold >= selectedTower.UpgradeCost)
                 {
                     Gold -= selectedTower.UpgradeCost;
                     selectedTower.Upgrade();
@@ -434,21 +383,52 @@ namespace TowerDefense
         //--------------------------------------------------------------
         public void ResetGame()
         {
+            // 1. Czyścimy wszystkie listy obiektów
             enemies.Clear();
             towers.Clear();
             bullets.Clear();
-            Gold = 100;
-            Lives = 5;
-            isGameOver = false;
             explosions.Clear();
+            waves.Clear();
 
+            // 2. Resetujemy flagi stanu gry
+            isGameOver = false;
             isVictory = false;
-            currentWaveIndex = 0;
-            timeToNextWave = 150;
+            isPaused = false;
             isWaveActive = false;
 
-            waves.Clear();
-            InitializeWaves();
+            // 3. Resetujemy liczniki
+            currentWaveIndex = 0;
+            timeToNextWave = 150;
+
+            // 4. WRACAMY DO MENU
+            isMenu = true;
         }
+        //--------------------------------------------------------------
+        public void SellSelectedTower()
+        {
+            if (selectedTower != null)
+            {
+                // Oblicz zwrot: (Koszt podstawowy + wydane na ulepszenia) / 2
+                // Ponieważ nie śledzimy dokładnie ile wydano, uprośćmy: 
+                // Zwrot to np. 40% aktualnego UpgradeCost (który rośnie z poziomem)
+                int refund = selectedTower.UpgradeCost / 2;
+
+                Gold += refund;
+
+                // Usuń wieżę z listy i odznacz ją
+                towers.Remove(selectedTower);
+                selectedTower = null;
+            }
+        }
+        //--------------------------------------------------------------
+        public void TogglePause()
+        {
+            // Pauzujemy tylko, jeśli gra trwa
+            if (!isGameOver && !isVictory)
+            {
+                isPaused = !isPaused;
+            }
+        }
+        // --------------------------------------------------------------
     }
 }

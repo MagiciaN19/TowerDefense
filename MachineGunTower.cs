@@ -32,6 +32,8 @@ namespace TowerDefense
 
             // Lufa
             g.FillRectangle(Brushes.Black, X - 5, Y - 25, 10, 20);
+
+            DrawLevelStars(g);
         }
     }
 }

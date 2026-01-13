@@ -17,11 +17,12 @@ namespace TowerDefense
         protected int currentCoolDown;
         public int Level { get; protected set; } = 1;
         public int UpgradeCost { get; protected set; } = 50;
+        public const int MaxLevel = 4;
 
         public Tower(int x, int y)
         {
             X = x;
-            Y = y; 
+            Y = y;
         }
 
         public virtual Bullet Update(List<Enemy> enemies)
@@ -60,12 +61,47 @@ namespace TowerDefense
 
         public void Upgrade()
         {
+            if (Level >= MaxLevel) return; // Maksymalny poziom osiągnięty
+
             Level++;
             Damage += 10;       // Zwiększamy obrażenia
             Range += 20f;       // Zwiększamy zasięg
             UpgradeCost += 50;  // Kolejne ulepszenie jest droższe
+
+
         }
 
         public abstract void Draw(Graphics g);
+
+        protected void DrawLevelStars(Graphics g)
+        {
+            // 1. Konfiguracja wyglądu
+            int starSize = 12;
+            int spacing = 3;
+            int count = Level - 1; // Liczba gwiazdek (Lvl 1 = 0, Lvl 2 = 1...)
+
+            if (count <= 0) return;
+
+            // 2. Matematyka centrowania
+            // Obliczamy ile miejsca zajmą wszystkie gwiazdki razem
+            int totalWidth = (count * starSize) + ((count - 1) * spacing);
+
+            // Wyliczamy start X, tak aby środek grupy gwiazdek pokrywał się ze środkiem wieży (X)
+            int startX = X - (totalWidth / 2);
+
+            // Wyliczamy start Y, tak aby były idealnie w pionowym środku wieży
+            int startY = Y - (starSize / 2);
+
+            // 3. Rysowanie
+            for (int i = 0; i < count; i++)
+            {
+                int currentX = startX + i * (starSize + spacing);
+
+                // Złote koło
+                g.FillEllipse(Brushes.Gold, currentX, startY, starSize, starSize);
+                // Grubsza czarna obwódka dla lepszej widoczności na kolorowym tle wieży
+                g.DrawEllipse(new Pen(Color.Black, 2), currentX, startY, starSize, starSize);
+            }
+        }
     }
 }

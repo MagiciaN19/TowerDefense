@@ -20,6 +20,8 @@ namespace TowerDefense
         public override void Draw(Graphics g)
         {
             g.FillRectangle(Brushes.Blue, X - 20, Y - 20, 40, 40);
+
+            DrawLevelStars(g);
         }
     }
 }
