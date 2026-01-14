@@ -11,7 +11,7 @@ namespace TowerDefense
     {
         public static int Cost = 80;
 
-        public MachineGunTower(int x, int y) : base(x, y)
+        public MachineGunTower(int x, int y) : base(x, y, Cost)
         {
             Range = 120f;       // Mniejszy zasięg niż Snajper
             Damage = 15;        // Małe obrażenia (Snajper ma 50)

@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualBasic.Devices;
 using System;
 using System.Collections.Generic;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -77,6 +76,9 @@ namespace TowerDefense
 
         private int spawnTimer = 0;
 
+        // --- 7. MENEDŻER DŹWIĘKÓW ---
+        private SoundManager soundManager;
+
         // Pomocnicze metody wymiarów
         public int GetScreenWidth() => map.GetWidth() + sidebarWidth;
         public int GetMapWidth() => map.GetWidth();
@@ -89,6 +91,7 @@ namespace TowerDefense
         {
             map = new GameMap();
             renderer = new GameRenderer(this);
+            soundManager = new SoundManager();
         }
         //--------------------------------------------------------------
         private void InitializeWaves()
@@ -218,6 +221,7 @@ namespace TowerDefense
                 if (currentWaveIndex >= waves.Count)
                 {
                     isVictory = true;
+                    soundManager.Play(GameSound.Win);
                 }
             }
             // -----------------------------
@@ -227,6 +231,10 @@ namespace TowerDefense
                 if (newBullet != null)
                 {
                     bullets.Add(newBullet);
+                    if (tower is SniperTower) soundManager.Play(GameSound.Sniper);
+                    else if (tower is MachineGunTower) soundManager.Play(GameSound.Shoot);
+                    else if (tower is RocketTower) soundManager.Play(GameSound.Shoot);
+                    else if (tower is SlowTower) soundManager.Play(GameSound.Freeze);
                 }
             }
 
@@ -239,6 +247,7 @@ namespace TowerDefense
                     if (bullets[i].ExplosionRadius > 0)
                     {
                         explosions.Add(new Explosion(bullets[i].X, bullets[i].Y, bullets[i].ExplosionRadius));
+                        soundManager.Play(GameSound.Explosion);
                     }
 
                     bullets.RemoveAt(i);
@@ -267,6 +276,7 @@ namespace TowerDefense
                     if (Lives <= 0)
                     {
                         isGameOver = true;
+                        soundManager.Play(GameSound.Lose);
                     }
 
                     continue;
@@ -339,7 +349,7 @@ namespace TowerDefense
             selectedTower = null;
 
             // Czy to jest trawa?
-            if (!map.IsGrass(mouseX, mouseY)) return;
+            if (!map.IsGrass(mouseX, mouseY)) { soundManager.Play(GameSound.Error); return; }
 
             // Obliczamy środek kratki
             int cellSize = map.CellSize;
@@ -361,11 +371,17 @@ namespace TowerDefense
             else if (SelectedTowerType == 3) { cost = RocketTower.Cost; newTower = new RocketTower(gridX, gridY); }
             else if (SelectedTowerType == 4) { cost = SlowTower.Cost; newTower = new SlowTower(gridX, gridY); }
 
+            // Brak środków
+            if (Gold < cost && newTower != null)
+            {
+                soundManager.Play(GameSound.Error);
+            }
             // Kupno
             if (Gold >= cost && newTower != null)
             {
                 towers.Add(newTower);
                 Gold -= cost;
+                soundManager.Play(GameSound.Build);
             }
         }
         //--------------------------------------------------------------
@@ -377,6 +393,11 @@ namespace TowerDefense
                 {
                     Gold -= selectedTower.UpgradeCost;
                     selectedTower.Upgrade();
+                    soundManager.Play(GameSound.Build);
+                }
+                else 
+                {
+                    soundManager.Play(GameSound.Error);
                 }
             }
         }
@@ -409,11 +430,10 @@ namespace TowerDefense
             if (selectedTower != null)
             {
                 // Oblicz zwrot: (Koszt podstawowy + wydane na ulepszenia) / 2
-                // Ponieważ nie śledzimy dokładnie ile wydano, uprośćmy: 
-                // Zwrot to np. 40% aktualnego UpgradeCost (który rośnie z poziomem)
-                int refund = selectedTower.UpgradeCost / 2;
+                int refund = selectedTower.TotalSpent / 2;
 
                 Gold += refund;
+                soundManager.Play(GameSound.Sell);
 
                 // Usuń wieżę z listy i odznacz ją
                 towers.Remove(selectedTower);

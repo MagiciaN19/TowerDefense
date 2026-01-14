@@ -11,7 +11,7 @@ namespace TowerDefense
     {
         public static int Cost = 100;
 
-        public RocketTower(int x, int y) : base(x, y)
+        public RocketTower(int x, int y) : base(x, y, Cost)
         {
             Range = 150f;      // Średni zasięg
             Damage = 40;       // Obrażenia mniejsze niż snajper, ale obszarowe!

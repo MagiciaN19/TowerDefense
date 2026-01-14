@@ -18,11 +18,13 @@ namespace TowerDefense
         public int Level { get; protected set; } = 1;
         public int UpgradeCost { get; protected set; } = 50;
         public const int MaxLevel = 4;
+        public int TotalSpent { get; protected set; } = 0;
 
-        public Tower(int x, int y)
+        public Tower(int x, int y, int initialCost)
         {
             X = x;
             Y = y;
+            TotalSpent = initialCost;
         }
 
         public virtual Bullet Update(List<Enemy> enemies)
@@ -63,12 +65,11 @@ namespace TowerDefense
         {
             if (Level >= MaxLevel) return; // Maksymalny poziom osiągnięty
 
+            TotalSpent += UpgradeCost;
             Level++;
             Damage += 10;       // Zwiększamy obrażenia
             Range += 20f;       // Zwiększamy zasięg
             UpgradeCost += 50;  // Kolejne ulepszenie jest droższe
-
-
         }
 
         public abstract void Draw(Graphics g);

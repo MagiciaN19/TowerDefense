@@ -164,7 +164,7 @@ namespace TowerDefense
                 }
 
                 currentY += 25;
-                g.DrawString($"[S] SPRZEDAJ: +${engine.SelectedTower.UpgradeCost / 2}", fontBold, Brushes.Orange, uiX + margin, currentY);
+                g.DrawString($"[S] SPRZEDAJ: +${engine.SelectedTower.TotalSpent / 2}", fontBold, Brushes.Orange, uiX + margin, currentY);
             }
             else
             {

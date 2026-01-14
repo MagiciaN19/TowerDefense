@@ -11,7 +11,7 @@ namespace TowerDefense
     {
         public static int Cost = 70;
 
-        public SlowTower(int x, int y) : base(x, y)
+        public SlowTower(int x, int y) : base(x, y, Cost)
         {
             Range = 130f;
             Damage = 5;       // Symboliczne obrażenia
