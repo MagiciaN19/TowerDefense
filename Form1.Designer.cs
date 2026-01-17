@@ -39,10 +39,15 @@
             // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(730, 450);
+            ClientSize = new Size(834, 600);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Margin = new Padding(3, 4, 3, 4);
+            MaximizeBox = false;
+            MinimizeBox = false;
             Name = "Form1";
+            ShowIcon = false;
             Text = "Form1";
             KeyDown += Form1_KeyDown;
             MouseClick += Form1_MouseClick;
