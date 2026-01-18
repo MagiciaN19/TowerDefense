@@ -96,34 +96,32 @@ namespace TowerDefense
         //--------------------------------------------------------------
         private void InitializeWaves()
         {
-            // Czyścimy stare fale
             waves.Clear();
 
-            // Mnożniki trudności
-            float countMultiplier = 1.0f; // Ile wrogów?
-            int speedInterval = 40;       // Jak szybko wychodzą? (mniej = szybciej)
+            float countMultiplier = 1.0f; 
+            int speedInterval = 40;       
 
-            // Ustawienia startowe w zależności od trudności
-            if (SelectedDifficulty == 0) // ŁATWY
+            
+            if (SelectedDifficulty == 0) 
             {
-                Gold = 300;     // Bogaty start
-                Lives = 10;     // Dużo życia
-                countMultiplier = 0.8f; // Mniej wrogów (-20%)
-                speedInterval = 60;     // Wolne wychodzenie
+                Gold = 300;     
+                Lives = 10;     
+                countMultiplier = 0.8f; 
+                speedInterval = 60;     
             }
-            else if (SelectedDifficulty == 1) // ŚREDNI
+            else if (SelectedDifficulty == 1) 
             {
                 Gold = 200;
                 Lives = 5;
-                countMultiplier = 1.0f; // Standard
+                countMultiplier = 1.0f; 
                 speedInterval = 40;
             }
-            else // TRUDNY
+            else 
             {
-                Gold = 150;     // Biedny start
-                Lives = 1;      // Jeden błąd i koniec!
-                countMultiplier = 1.5f; // Dużo wrogów (+50%)
-                speedInterval = 25;     // Bardzo szybki atak
+                Gold = 150;
+                Lives = 1;      
+                countMultiplier = 1.5f; 
+                speedInterval = 25;     
             }
 
             var path = map.GetWaypoints();
@@ -133,21 +131,18 @@ namespace TowerDefense
             {
                 Wave newWave = new Wave(speedInterval);
 
-                // Obliczamy bazową ilość wrogów dla tej fali (np. fala 1 = 5 wrogów, fala 10 = 14 wrogów)
                 int baseCount = 4 + i;
 
-                // Aplikujemy mnożnik trudności
                 int finalCount = (int)(baseCount * countMultiplier);
 
                 // -- LOGIKA SKŁADU FALI --
                 for (int j = 0; j < finalCount; j++)
                 {
-                    // Co 3 fale dochodzą trudniejsi wrogowie
-                    if (i % 3 == 0 && j < i) // Np. w 3, 6, 9 fali dodaj Czołgi
+                    if (i % 3 == 0 && j < i) 
                     {
                         newWave.AddEnemy(new TankEnemy(path));
                     }
-                    else if (i > 1 && j % 2 == 0) // Od 2 fali co drugi to szybki
+                    else if (i > 1 && j % 2 == 0) 
                     {
                         newWave.AddEnemy(new FastEnemy(path));
                     }
@@ -169,7 +164,6 @@ namespace TowerDefense
 
             if (isGameOver || isVictory) return;
 
-            // Sprawdzamy, czy wciąż są fale do rozegrania
             if (currentWaveIndex < waves.Count)
             {
                 Wave currentWave = waves[currentWaveIndex];
@@ -389,24 +383,20 @@ namespace TowerDefense
         //--------------------------------------------------------------
         public void ResetGame()
         {
-            // 1. Czyścimy wszystkie listy obiektów
             enemies.Clear();
             towers.Clear();
             bullets.Clear();
             explosions.Clear();
             waves.Clear();
 
-            // 2. Resetujemy flagi stanu gry
             isGameOver = false;
             isVictory = false;
             isPaused = false;
             isWaveActive = false;
 
-            // 3. Resetujemy liczniki
             currentWaveIndex = 0;
             timeToNextWave = 150;
 
-            // 4. WRACAMY DO MENU
             isMenu = true;
         }
         //--------------------------------------------------------------
