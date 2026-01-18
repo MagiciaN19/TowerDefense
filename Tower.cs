@@ -63,13 +63,13 @@ namespace TowerDefense
 
         public void Upgrade()
         {
-            if (Level >= MaxLevel) return; // Maksymalny poziom osiągnięty
+            if (Level >= MaxLevel) return; 
 
             TotalSpent += UpgradeCost;
             Level++;
-            Damage += 10;       // Zwiększamy obrażenia
-            Range += 20f;       // Zwiększamy zasięg
-            UpgradeCost += 50;  // Kolejne ulepszenie jest droższe
+            Damage += 10;       
+            Range += 20f;       
+            UpgradeCost += 50;  
         }
 
         public abstract void Draw(Graphics g);
@@ -79,18 +79,15 @@ namespace TowerDefense
             // 1. Konfiguracja wyglądu
             int starSize = 12;
             int spacing = 3;
-            int count = Level - 1; // Liczba gwiazdek (Lvl 1 = 0, Lvl 2 = 1...)
+            int count = Level - 1; 
 
             if (count <= 0) return;
 
             // 2. Matematyka centrowania
-            // Obliczamy ile miejsca zajmą wszystkie gwiazdki razem
             int totalWidth = (count * starSize) + ((count - 1) * spacing);
 
-            // Wyliczamy start X, tak aby środek grupy gwiazdek pokrywał się ze środkiem wieży (X)
             int startX = X - (totalWidth / 2);
 
-            // Wyliczamy start Y, tak aby były idealnie w pionowym środku wieży
             int startY = Y - (starSize / 2);
 
             // 3. Rysowanie
@@ -98,9 +95,7 @@ namespace TowerDefense
             {
                 int currentX = startX + i * (starSize + spacing);
 
-                // Złote koło
                 g.FillEllipse(Brushes.Gold, currentX, startY, starSize, starSize);
-                // Grubsza czarna obwódka dla lepszej widoczności na kolorowym tle wieży
                 g.DrawEllipse(new Pen(Color.Black, 2), currentX, startY, starSize, starSize);
             }
         }

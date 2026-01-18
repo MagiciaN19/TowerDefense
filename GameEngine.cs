@@ -180,8 +180,8 @@ namespace TowerDefense
                     timeToNextWave--;
                     if (timeToNextWave <= 0)
                     {
-                        isWaveActive = true; // Startujemy falę!
-                        spawnTimer = 0;      // Reset licznika spawnu
+                        isWaveActive = true;
+                        spawnTimer = 0;
                     }
                 }
                 // ETAP 2: Wypuszczanie wrogów (Spawnowanie)
@@ -190,34 +190,27 @@ namespace TowerDefense
                     spawnTimer++;
                     if (spawnTimer >= currentWave.SpawnInterval)
                     {
-                        spawnTimer = 0; // Reset
+                        spawnTimer = 0; 
 
-                        // Czy są jeszcze wrogowie w kolejce tej fali?
                         if (currentWave.Enemies.Count > 0)
                         {
-                            // Wyjmij wroga z kolejki i dodaj na mapę
                             Enemy newEnemy = currentWave.Enemies.Dequeue();
                             enemies.Add(newEnemy);
                         }
-                        else
-                        {
-                            // Kolejka pusta - fala "wyszła" w całości
-                        }
+                        else { }
                     }
                 }
             }
 
             // ETAP 3: Sprawdzenie końca fali
-            // Jeśli fala jest aktywna, ale kolejka pusta I na mapie nie ma wrogów...
             if (isWaveActive &&
                 waves[currentWaveIndex].Enemies.Count == 0 &&
                 enemies.Count == 0)
             {
-                isWaveActive = false;    // Koniec walki
-                currentWaveIndex++;      // Przełącz na następną falę
-                timeToNextWave = 150;    // Ustaw czas przerwy (5 sek)
+                isWaveActive = false;    
+                currentWaveIndex++;      
+                timeToNextWave = 150;    
 
-                // Sprawdź czy to była ostatnia fala
                 if (currentWaveIndex >= waves.Count)
                 {
                     isVictory = true;
@@ -256,7 +249,7 @@ namespace TowerDefense
 
             for (int i = explosions.Count - 1; i >= 0; i--)
             {
-                explosions[i].Update(); // <-- To zmniejsza alpha o 10
+                explosions[i].Update();
 
                 if (explosions[i].IsFinished)
                 {
@@ -331,13 +324,11 @@ namespace TowerDefense
 
             // --- CZĘŚĆ 2: GRA WŁAŚCIWA ---
 
-            // Jeśli pauza, nie reaguj na kliknięcia w mapę
             if (isPaused) return;
 
             // A. Sprawdzamy, czy kliknięto w istniejącą wieżę (ZAZNACZANIE)
             foreach (var tower in towers)
             {
-                // Czy kliknięto blisko środka wieży? (zakładamy promień 25px)
                 if (Math.Abs(tower.X - mouseX) < 25 && Math.Abs(tower.Y - mouseY) < 25)
                 {
                     selectedTower = tower;
@@ -348,21 +339,17 @@ namespace TowerDefense
             // B. Jeśli nie kliknęliśmy w wieżę -> Odznaczamy i próbujemy BUDOWAĆ
             selectedTower = null;
 
-            // Czy to jest trawa?
             if (!map.IsGrass(mouseX, mouseY)) { soundManager.Play(GameSound.Error); return; }
 
-            // Obliczamy środek kratki
             int cellSize = map.CellSize;
             int gridX = (mouseX / cellSize) * cellSize + cellSize / 2;
             int gridY = (mouseY / cellSize) * cellSize + cellSize / 2;
 
-            // Sprawdź czy w tym miejscu już coś nie stoi (kolizja dokładna)
             foreach (var t in towers)
             {
                 if (t.X == gridX && t.Y == gridY) return;
             }
 
-            // Wybór typu wieży i kosztu
             int cost = 0;
             Tower newTower = null;
 
@@ -371,12 +358,10 @@ namespace TowerDefense
             else if (SelectedTowerType == 3) { cost = RocketTower.Cost; newTower = new RocketTower(gridX, gridY); }
             else if (SelectedTowerType == 4) { cost = SlowTower.Cost; newTower = new SlowTower(gridX, gridY); }
 
-            // Brak środków
             if (Gold < cost && newTower != null)
             {
                 soundManager.Play(GameSound.Error);
             }
-            // Kupno
             if (Gold >= cost && newTower != null)
             {
                 towers.Add(newTower);
@@ -429,13 +414,11 @@ namespace TowerDefense
         {
             if (selectedTower != null)
             {
-                // Oblicz zwrot: (Koszt podstawowy + wydane na ulepszenia) / 2
                 int refund = selectedTower.TotalSpent / 2;
 
                 Gold += refund;
                 soundManager.Play(GameSound.Sell);
 
-                // Usuń wieżę z listy i odznacz ją
                 towers.Remove(selectedTower);
                 selectedTower = null;
             }
@@ -443,7 +426,6 @@ namespace TowerDefense
         //--------------------------------------------------------------
         public void TogglePause()
         {
-            // Pauzujemy tylko, jeśli gra trwa
             if (!isGameOver && !isVictory)
             {
                 isPaused = !isPaused;

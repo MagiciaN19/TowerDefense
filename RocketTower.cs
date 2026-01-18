@@ -13,9 +13,9 @@ namespace TowerDefense
 
         public RocketTower(int x, int y) : base(x, y, Cost)
         {
-            Range = 150f;      // Średni zasięg
-            Damage = 40;       // Obrażenia mniejsze niż snajper, ale obszarowe!
-            ReloadTime = 90;   // Wolne przeładowanie (co 3 sekundy)
+            Range = 150f;      
+            Damage = 40;       
+            ReloadTime = 90;   
         }
 
         public override Bullet Update(List<Enemy> enemies)

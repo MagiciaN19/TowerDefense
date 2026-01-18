@@ -46,10 +46,8 @@ namespace TowerDefense
                 // --- LOGIKA WYBUCHU ---
                 if (ExplosionRadius > 0)
                 {
-                    // Szukamy wszystkich wrogów w promieniu wybuchu
                     foreach (var enemy in allEnemies)
                     {
-                        // Liczymy odległość pocisku od wroga
                         float ex = enemy.X - X;
                         float ey = enemy.Y - Y;
                         float distToEnemy = (float)Math.Sqrt(ex * ex + ey * ey);
@@ -62,7 +60,6 @@ namespace TowerDefense
                 }
                 else
                 {
-                    // Zwykły pocisk (tylko jeden cel)
                     Target.Health -= Damage;
                     if (FreezeDuration > 0)
                     {
@@ -81,16 +78,14 @@ namespace TowerDefense
         {
             if (ExplosionRadius > 0)
             {
-                // Rakieta jest większa i ciemniejsza
                 g.FillEllipse(Brushes.Black, X - 5, Y - 5, 10, 10);
             }
-            else if (FreezeDuration > 0) // Lód
+            else if (FreezeDuration > 0) 
             {
                 g.FillEllipse(Brushes.Cyan, X - 3, Y - 3, 6, 6);
             }
             else
             {
-                // Zwykły pocisk
                 g.FillEllipse(Brushes.Yellow, X - 3, Y - 3, 6, 6);
             }
         }

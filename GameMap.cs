@@ -10,7 +10,6 @@ namespace TowerDefense
     public class GameMap
     {
         public int CellSize { get; private set; } = 50;
-        // Układ mapy: 0 = Trawa (miejsce na wieże), 1 = Ścieżka (tędy idą wrogowie)
         private int[,] levelLayout = new int[,]
         {
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },

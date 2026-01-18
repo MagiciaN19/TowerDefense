@@ -13,7 +13,6 @@ namespace TowerDefense
         public float Y { get; private set; }
         public int Radius { get; private set; }
 
-        // Przezroczystość (255 = pełny kolor, 0 = niewidoczny)
         private int alpha = 150;
 
         public bool IsFinished => alpha <= 0;
@@ -27,7 +26,6 @@ namespace TowerDefense
 
         public void Update()
         {
-            // Zmniejszamy widoczność co klatkę (efekt zanikania)
             alpha -= 15;
         }
 
@@ -35,11 +33,9 @@ namespace TowerDefense
         {
             if (alpha <= 0) return;
 
-            // Tworzymy kolor z aktualną przezroczystością
             Color color = Color.FromArgb(alpha, Color.OrangeRed);
             using (Brush brush = new SolidBrush(color))
             {
-                // Rysujemy koło wybuchu
                 g.FillEllipse(brush, X - Radius, Y - Radius, Radius * 2, Radius * 2);
             }
 

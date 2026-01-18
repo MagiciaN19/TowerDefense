@@ -12,7 +12,6 @@ namespace TowerDefense
     {
         private GameEngine engine;
 
-        // Czcionki
         private Font fontHeader = new Font("Arial", 12, FontStyle.Bold);
         private Font fontSmall = new Font("Arial", 9);
         private Font fontBold = new Font("Arial", 10, FontStyle.Bold);
@@ -30,7 +29,6 @@ namespace TowerDefense
             foreach (var enemy in engine.Enemies) enemy.Draw(g);
             foreach (var tower in engine.Towers) tower.Draw(g);
 
-            // Zaznaczenie wieży
             if (engine.SelectedTower != null)
             {
                 g.DrawRectangle(new Pen(Color.White, 3), engine.SelectedTower.X - 25, engine.SelectedTower.Y - 25, 50, 50);
@@ -41,13 +39,12 @@ namespace TowerDefense
             foreach (var bullet in engine.Bullets) bullet.Draw(g);
             foreach (var explosion in engine.Explosions) explosion.Draw(g);
 
-            // Wizualizacja zasięgu przy budowaniu
             DrawBuildRange(g, mousePosition);
 
             // 2. Rysowanie UI
             if (engine.IsMenu)
             {
-                DrawMenu(g); // Teraz to zadziała poprawnie
+                DrawMenu(g); // 
             }
             else
             {
@@ -253,12 +250,14 @@ namespace TowerDefense
 
         private void DrawOverlays(Graphics g)
         {
+            // 1. EKRAN PAUZY
             if (engine.IsPaused)
             {
-                g.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), 0, 0, engine.Map.GetWidth(), engine.Map.GetHeight());
+                g.FillRectangle(new SolidBrush(Color.FromArgb(150, 0, 0, 0)), 0, 0, engine.GetScreenWidth(), engine.GetMapHeight());
 
-                int cx = engine.Map.GetWidth() / 2;
-                int cy = engine.Map.GetHeight() / 2;
+                int cx = engine.GetScreenWidth() / 2;
+                int cy = engine.GetMapHeight() / 2;
+
                 int barWidth = 25;
                 int barHeight = 80;
                 int pauseGap = 15;
@@ -272,19 +271,21 @@ namespace TowerDefense
                 StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString("PAUZA", new Font("Arial", 20, FontStyle.Bold), Brushes.White, cx, cy + 60, sf);
             }
+            // 2. EKRAN KOŃCOWY (WIN / LOSE)
             else if (engine.IsGameOver || engine.IsVictory)
             {
                 Color bg = engine.IsVictory ? Color.FromArgb(200, 0, 50, 0) : Color.FromArgb(200, 0, 0, 0);
                 string txt = engine.IsVictory ? "ZWYCIĘSTWO!" : "GAME OVER";
                 Brush color = engine.IsVictory ? Brushes.Lime : Brushes.Red;
 
-                g.FillRectangle(new SolidBrush(bg), 0, 0, engine.Map.GetWidth(), engine.Map.GetHeight());
+                g.FillRectangle(new SolidBrush(bg), 0, 0, engine.GetScreenWidth(), engine.GetMapHeight());
 
                 StringFormat sf = new StringFormat();
                 sf.Alignment = StringAlignment.Center;
                 sf.LineAlignment = StringAlignment.Center;
-                int cx = engine.Map.GetWidth() / 2;
-                int cy = engine.Map.GetHeight() / 2;
+
+                int cx = engine.GetScreenWidth() / 2;
+                int cy = engine.GetMapHeight() / 2;
 
                 g.DrawString(txt, new Font("Arial", 48, FontStyle.Bold), color, cx, cy - 50, sf);
                 g.DrawString("Wciśnij 'R' aby zagrać ponownie", new Font("Arial", 24), Brushes.White, cx, cy + 20, sf);

@@ -11,20 +11,18 @@ namespace TowerDefense
     {
         public TankEnemy(List<Point> path) : base(path)
         {
-            Speed = 1.0f;   // Bardzo wolny
-            Health = 500;   // 5x więcej życia niż Normalny (10 strzałów snajpera!)
+            Speed = 1.0f;   
+            Health = 500;  
             MaxHealth = 500;
-            Size = 45;      // Duży, łatwy do trafienia
-            Reward = 50;    // Wysoka nagroda za pokonanie
+            Size = 45;      
+            Reward = 50;    
         }
 
         public override void Draw(Graphics g)
         {
-            // ciemnoszary "czołg"
             g.FillEllipse(Brushes.DarkSlateGray, X - Size / 2, Y - Size / 2, Size, Size);
             g.DrawEllipse(Pens.Black, X - Size / 2, Y - Size / 2, Size, Size);
 
-            // Dodatkowy element graficzny, "pancerz" w środku
             g.DrawRectangle(Pens.Black, X - 10, Y - 10, 20, 20);
 
             base.DrawHealthBar(g);

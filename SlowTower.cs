@@ -14,8 +14,8 @@ namespace TowerDefense
         public SlowTower(int x, int y) : base(x, y, Cost)
         {
             Range = 130f;
-            Damage = 5;       // Symboliczne obrażenia
-            ReloadTime = 45;  // Średnia szybkostrzelność
+            Damage = 5;       
+            ReloadTime = 45;  
         }
 
         public override Bullet Update(List<Enemy> enemies)
@@ -52,11 +52,9 @@ namespace TowerDefense
 
         public override void Draw(Graphics g)
         {
-            // Błękitny romb lub kółko
             g.FillRectangle(Brushes.LightSkyBlue, X - 15, Y - 15, 30, 30);
             g.DrawRectangle(Pens.Blue, X - 15, Y - 15, 30, 30);
 
-            // "Kryształ" w środku
             g.FillEllipse(Brushes.White, X - 5, Y - 5, 10, 10);
 
             DrawLevelStars(g);

@@ -47,35 +47,35 @@ namespace TowerDefense
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.D1) // Klawisz "1"
+            if (e.KeyCode == Keys.D1) 
             {
                 gameEngine.SelectedTowerType = 1;
             }
-            else if (e.KeyCode == Keys.D2) // Klawisz "2"
+            else if (e.KeyCode == Keys.D2) 
             {
                 gameEngine.SelectedTowerType = 2;
             }
-            else if (e.KeyCode == Keys.D3) // Klawisz "3"
+            else if (e.KeyCode == Keys.D3) 
             {
                 gameEngine.SelectedTowerType = 3;
             }
-            else if (e.KeyCode == Keys.D4) // Klawisz "4"
+            else if (e.KeyCode == Keys.D4) 
             {
                 gameEngine.SelectedTowerType = 4;
             }
-            else if (e.KeyCode == Keys.R) // Klawisz "R" - Restart gry
+            else if (e.KeyCode == Keys.R) 
             {
                 gameEngine.ResetGame();
             }
-            else if (e.KeyCode == Keys.U) // Klawisz "U"
+            else if (e.KeyCode == Keys.U) 
             {
                 gameEngine.TryUpgradeTower();
             }
-            else if (e.KeyCode == Keys.S) // Klawisz "S"
+            else if (e.KeyCode == Keys.S) 
             {
                 gameEngine.SellSelectedTower();
             }
-            else if (e.KeyCode == Keys.P) // Klawisz "P"
+            else if (e.KeyCode == Keys.P)
             {
                 gameEngine.TogglePause();
             }

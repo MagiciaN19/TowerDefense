@@ -82,11 +82,10 @@ namespace TowerDefense
             float healthPercentage = (float)Health / MaxHealth;
             if (healthPercentage < 0) healthPercentage = 0;
 
-            // Ustawienia paska
-            int barWidth = Size;          // Pasek szeroki jak wróg
+            int barWidth = Size;          
             int barHeight = 5;
-            int barX = (int)X - Size / 2; // Pozycja X (wyrównana do wroga)
-            int barY = (int)Y - Size / 2 - 10; // Pozycja Y (troszkę nad głową)
+            int barX = (int)X - Size / 2; 
+            int barY = (int)Y - Size / 2 - 10; 
 
             g.FillRectangle(Brushes.Red, barX, barY, barWidth, barHeight);
 

@@ -13,9 +13,9 @@ namespace TowerDefense
 
         public MachineGunTower(int x, int y) : base(x, y, Cost)
         {
-            Range = 120f;       // Mniejszy zasięg niż Snajper
-            Damage = 15;        // Małe obrażenia (Snajper ma 50)
-            ReloadTime = 10;    // Bardzo szybka! (Strzał co 10 klatek, Snajper ma 60)
+            Range = 120f;       
+            Damage = 15;        
+            ReloadTime = 10;    
         }
 
         public override void Draw(Graphics g)
@@ -30,7 +30,6 @@ namespace TowerDefense
             g.FillPolygon(Brushes.DarkOrange, points);
             g.DrawPolygon(Pens.Black, points);
 
-            // Lufa
             g.FillRectangle(Brushes.Black, X - 5, Y - 25, 10, 20);
 
             DrawLevelStars(g);

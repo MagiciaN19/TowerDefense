@@ -11,7 +11,6 @@ namespace TowerDefense
         // Kolejka wrogów do zespawnowania w tej fali
         public Queue<Enemy> Enemies { get; private set; } = new Queue<Enemy>();
 
-        // Czas przerwy między wrogami w TEJ fali (w klatkach)
         public int SpawnInterval { get; private set; }
 
         public Wave(int spawnInterval)
@@ -19,7 +18,6 @@ namespace TowerDefense
             SpawnInterval = spawnInterval;
         }
 
-        // Metoda pomocnicza do dodawania wrogów do kolejki
         public void AddEnemy(Enemy enemy)
         {
             Enemies.Enqueue(enemy);

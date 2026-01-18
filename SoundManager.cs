@@ -14,7 +14,6 @@ namespace TowerDefense
         private Dictionary<GameSound, Uri> soundPaths = new Dictionary<GameSound, Uri>();
 
         // PULA ODTWARZACZY
-        // Tworzymy 20 odtwarzaczy raz, a potem ich używamy w kółko.
         private List<MediaPlayer> playersPool = new List<MediaPlayer>();
         private int poolSize = 20;
         private int currentPlayerIndex = 0;
@@ -33,7 +32,6 @@ namespace TowerDefense
             AddSound(GameSound.Freeze, Path.Combine(baseDir, "Sounds", "Freeze.wav"));
             AddSound(GameSound.Sniper, Path.Combine(baseDir, "Sounds", "Sniper.wav"));
 
-            // Inicjalizacja puli
             for (int i = 0; i < poolSize; i++)
             {
                 playersPool.Add(new MediaPlayer());
@@ -52,10 +50,8 @@ namespace TowerDefense
         {
             if (soundPaths.ContainsKey(sound))
             {
-                // Bierzemy kolejny odtwarzacz z puli zamiast tworzyć nowy
                 MediaPlayer player = playersPool[currentPlayerIndex];
 
-                // Przesuwamy indeks
                 currentPlayerIndex++;
                 if (currentPlayerIndex >= poolSize)
                 {
